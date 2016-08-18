@@ -12,12 +12,17 @@ def s1ch2(buf1 = "1c0111001f010100061a024b53535009181c", buf2 = "686974207468652
     str1 = buf1.decode("hex")
     str2 = buf2.decode("hex")
     
-    xored = ""
-    for x, y in zip(str1, str2):
-        xored = xored + chr(ord(x) ^ ord(y))
+    xored = getXored(str1, str2)
+    
     encoded = xored.encode("hex")
     print "set1challange2 (746865206b696420646f6e277420706c6179 expected):"
     print encoded
+
+def getXored(str1, str2):
+    xored = ""
+    for x, y in zip(str1, str2):
+        xored = xored + chr(ord(x) ^ ord(y))
+    return xored
 
 def s1ch3(buf = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"):
     xoredStr = buf.decode("hex")
@@ -51,9 +56,7 @@ def findSingleCharXor(xoredStr):
         
     
     sortedList = sorted(candidateList, key=lambda x:x[0], reverse=True)
-    firstcandidate = []
-    if(len(sortedList) > 0):
-        firstcandidate = sortedList[0]
+    firstcandidate = sortedList[0]
     return firstcandidate
 
 def s1ch4():
@@ -98,13 +101,13 @@ def binHammingDistance(str1 = "this is a test", str2 = "wokka wokka!!!"):
 def calckeysize(encryptedString):
     distances = []
     for key_size in range(2, 41):
-        dist1 = binHammingDistance(encryptedString[0], encryptedString[key_size])
-        dist2 = binHammingDistance(encryptedString[key_size], encryptedString[key_size + key_size])
-        dist3 = binHammingDistance(encryptedString[2 * key_size], encryptedString[2 * key_size + key_size])
-        dist4 = binHammingDistance(encryptedString[3 * key_size], encryptedString[3 * key_size + key_size])
-        dist5 = binHammingDistance(encryptedString[4 * key_size], encryptedString[4 * key_size + key_size])
+        dist1 = binHammingDistance(encryptedString[0 : key_size], encryptedString[key_size : 2 * key_size])
+        dist2 = binHammingDistance(encryptedString[2 * key_size : 3 * key_size], encryptedString[3 * key_size : 4 * key_size])
+        dist3 = binHammingDistance(encryptedString[4 * key_size : 5 * key_size], encryptedString[5 * key_size : 6 * key_size])
+        dist4 = binHammingDistance(encryptedString[6 * key_size : 7 * key_size], encryptedString[7 * key_size : 8 * key_size])
+        dist5 = binHammingDistance(encryptedString[8 * key_size : 9 * key_size], encryptedString[9 * key_size : 10 * key_size])
         avg_norm_dist = float(dist1 + dist2 + dist3 + dist4 + dist5) / 5 / key_size
-        #avg_norm_dist = float(dist1 + dist2 + dist3) / 3 / key_size
+        #avg_norm_dist = float(dist1 + dist2) / 2 / key_size
         distances.append((key_size, avg_norm_dist))
     sorted_distances = sorted(distances, key=lambda x: x[1])[:3]
     print sorted_distances
@@ -113,14 +116,17 @@ def calckeysize(encryptedString):
 
 def s1ch6():
     #binHammingDistance()
-    #working
+    # working
+    
     f = open("6.txt", 'r')
     encodedString = f.read()
     encryptedString = base64.b64decode(encodedString)
+    
     #calckeysize(encryptedString)
-    #working, result:
-    #[(37, 0.07027027027027027), (38, 0.07368421052631578), (27, 0.07407407407407407)]
-    key_size = 37
+    # working, result:
+    # [(5, 2.68), (29, 2.6965517241379313), (15, 2.96)]
+    # correct size is 29
+    key_size = 29
     blocks = [encryptedString[i:i+key_size] for i in range(0, len(encryptedString), key_size)]
     
     transposed_blocks = []
@@ -128,10 +134,17 @@ def s1ch6():
         moo = [block[i] for block in blocks[:-1]]
         transposed_blocks.append("".join(moo))
     
+    key = ""
     for tblock in transposed_blocks:
         moo = findSingleCharXor(tblock)
-        print moo
+        key += moo[2]
     
+    print "key is '%s'" % key
+    
+    decrypted = "".join([getXored(key, x) for x in blocks])
+    
+    print "decrypted message is:"
+    print decrypted
 
 #s1ch1()
 #s1ch2()
