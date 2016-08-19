@@ -1,5 +1,6 @@
 import base64
 import string
+from Crypto.Cipher import AES
 
 def ch1():
     hexStr = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
@@ -8,7 +9,7 @@ def ch1():
     print "set1challange2 (SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t expected):"
     print b64enc
 
-def ch2(buf1 = "1c0111001f010100061a024b53535009181c", buf2 = "686974207468652062756c6c277320657965"):
+def ch2(buf1="1c0111001f010100061a024b53535009181c", buf2="686974207468652062756c6c277320657965"):
     str1 = buf1.decode("hex")
     str2 = buf2.decode("hex")
     
@@ -24,7 +25,7 @@ def getXored(str1, str2):
         xored = xored + chr(ord(x) ^ ord(y))
     return xored
 
-def ch3(buf = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"):
+def ch3(buf="1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"):
     xoredStr = buf.decode("hex")
     candidate = findSingleCharXor(xoredStr)
     foundString = candidate[1]
@@ -35,7 +36,7 @@ def findSingleCharXor(xoredStr):
     strLen = len(xoredStr)
     
     candidateList = []
-    for i in range(0,128):
+    for i in range(0, 128):
         singleCharString = ""
         currentChar = chr(i)
         for x in range(strLen):
@@ -56,7 +57,7 @@ def findSingleCharXor(xoredStr):
     return firstcandidate
 
 def ch4():
-    f = open("data/4.txt", 'r')
+    f = open("data/set1/4.txt", 'r')
     encryptedList = f.readlines()
     for i, encryptedString in enumerate(encryptedList):
         singleCharXored = ch3(str(encryptedString).strip())
@@ -64,7 +65,7 @@ def ch4():
             print "found " + singleCharXored + " at line " + str(i)
             break
 
-def ch5(stringToEncode = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", key = "ICE"):
+def ch5(stringToEncode="Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", key="ICE"):
     repeatingKey = ""
     while len(repeatingKey) < len(stringToEncode):
         repeatingKey = repeatingKey + key
@@ -74,7 +75,7 @@ def ch5(stringToEncode = "Burning 'em, if you ain't quick and nimble\nI go crazy
     encoded = xored.encode("hex")
     print encoded
 
-def binHammingDistance(str1 = "this is a test", str2 = "wokka wokka!!!"):
+def binHammingDistance(str1="this is a test", str2="wokka wokka!!!"):
     distance = 0
     for x, y in zip(str1, str2):
         bin1 = bin(ord(x))[2:]
@@ -103,7 +104,7 @@ def calckeysize(encryptedString):
         dist4 = binHammingDistance(encryptedString[6 * key_size : 7 * key_size], encryptedString[7 * key_size : 8 * key_size])
         dist5 = binHammingDistance(encryptedString[8 * key_size : 9 * key_size], encryptedString[9 * key_size : 10 * key_size])
         avg_norm_dist = float(dist1 + dist2 + dist3 + dist4 + dist5) / 5 / key_size
-        #avg_norm_dist = float(dist1 + dist2) / 2 / key_size
+        # avg_norm_dist = float(dist1 + dist2) / 2 / key_size
         distances.append((key_size, avg_norm_dist))
     sorted_distances = sorted(distances, key=lambda x: x[1])[:3]
     print "top 3 (key_size, normalized distance) touples:"
@@ -113,7 +114,7 @@ def calckeysize(encryptedString):
 def ch6():
     binHammingDistance()
     
-    f = open("data/6.txt", 'r')
+    f = open("data/set1/6.txt", 'r')
     encodedString = f.read()
     encryptedString = base64.b64decode(encodedString)
     
@@ -122,7 +123,7 @@ def ch6():
     # [(5, 2.68), (29, 2.6965517241379313), (15, 2.96)]
     # correct size is 29
     key_size = 29
-    blocks = [encryptedString[i:i+key_size] for i in range(0, len(encryptedString), key_size)]
+    blocks = [encryptedString[i:i + key_size] for i in range(0, len(encryptedString), key_size)]
     
     transposed_blocks = []
     for i in range(key_size):
@@ -137,10 +138,36 @@ def ch6():
     print "decryptedString message is:\n%s" % decryptedString
 
 def ch7():
-    print "try later"
+    f = open("data/set1/7.txt", 'r')
+    encodedCiphertext = f.read()
+    ciphertext = base64.b64decode(encodedCiphertext)
+    key = "YELLOW SUBMARINE"
+    cipher = AES.new(key)
+    decrypted_text = cipher.decrypt(ciphertext)
+    print decrypted_text
 
 def ch8():
-    print "try later"
+    f = open("data/set1/8.txt", 'r')
+    encodedCiphertexts = f.readlines()
+    ciphertexts = [encoded.strip().decode("hex") for encoded in encodedCiphertexts]
+    key_size = 16
+    
+    duplicates = []
+    for text_index, text in enumerate(ciphertexts):
+        unique_blocks = []
+        duplicate_counter = 0
+        blocks = [text[index:index + key_size] for index in range(0, len(text), key_size)]
+        for block in blocks:
+            if block in unique_blocks:
+                duplicate_counter += 1
+            else:
+                unique_blocks.append(block)
+        
+        duplicates.append((text_index, duplicate_counter))
+    
+    sorted_duplicates = sorted(duplicates, key=lambda x : x[1], reverse=True)[:3]
+    print "top 3 (line, duplicate_count):"
+    print sorted_duplicates
 
 def init():
     choice = raw_input("enter [1-8] to select challange: ")
@@ -154,6 +181,6 @@ def init():
         "7": ch7,
         "8": ch8,
     }
-    methodSwitcher.get(choice, ch6)()
+    methodSwitcher.get(choice, ch8)()
 
 init()
