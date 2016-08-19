@@ -1,14 +1,14 @@
 import base64
 import string
 
-def s1ch1():
+def ch1():
     hexStr = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
     decodedStr = hexStr.decode("hex")
     b64enc = base64.b64encode(decodedStr)
     print "set1challange2 (SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t expected):"
     print b64enc
 
-def s1ch2(buf1 = "1c0111001f010100061a024b53535009181c", buf2 = "686974207468652062756c6c277320657965"):
+def ch2(buf1 = "1c0111001f010100061a024b53535009181c", buf2 = "686974207468652062756c6c277320657965"):
     str1 = buf1.decode("hex")
     str2 = buf2.decode("hex")
     
@@ -24,7 +24,7 @@ def getXored(str1, str2):
         xored = xored + chr(ord(x) ^ ord(y))
     return xored
 
-def s1ch3(buf = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"):
+def ch3(buf = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"):
     xoredStr = buf.decode("hex")
     candidate = findSingleCharXor(xoredStr)
     foundString = candidate[1]
@@ -49,26 +49,22 @@ def findSingleCharXor(xoredStr):
         for x in xored:
             if x in string.ascii_letters + " .,'*!?\n":
                 charCount += 1
-        
-        if False:
-            candidateList.append((charCount, xored, chr(i)))
-        candidateList.append((charCount, xored, chr(i)))
-        
+        candidateList.append((charCount, xored, currentChar))
     
     sortedList = sorted(candidateList, key=lambda x:x[0], reverse=True)
     firstcandidate = sortedList[0]
     return firstcandidate
 
-def s1ch4():
-    f = open("4.txt", 'r')
+def ch4():
+    f = open("data/4.txt", 'r')
     encryptedList = f.readlines()
     for i, encryptedString in enumerate(encryptedList):
-        singleCharXored = s1ch3(str(encryptedString).strip())
+        singleCharXored = ch3(str(encryptedString).strip())
         if singleCharXored is not "":
             print "found " + singleCharXored + " at line " + str(i)
             break
 
-def s1ch5(stringToEncode = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", key = "ICE"):
+def ch5(stringToEncode = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal", key = "ICE"):
     repeatingKey = ""
     while len(repeatingKey) < len(stringToEncode):
         repeatingKey = repeatingKey + key
@@ -79,7 +75,7 @@ def s1ch5(stringToEncode = "Burning 'em, if you ain't quick and nimble\nI go cra
     print encoded
 
 def binHammingDistance(str1 = "this is a test", str2 = "wokka wokka!!!"):
-    diffCount = 0
+    distance = 0
     for x, y in zip(str1, str2):
         bin1 = bin(ord(x))[2:]
         bin2 = bin(ord(y))[2:]
@@ -89,14 +85,14 @@ def binHammingDistance(str1 = "this is a test", str2 = "wokka wokka!!!"):
             bin1 = "0" + bin1
         for a, b in zip(bin1, bin2):
             if a != b:
-                diffCount += 1
+                distance += 1
     if str1 == "this is a test" and str2 == "wokka wokka!!!":
-        if diffCount == 37:
-            print "woohoo test successful"
+        if distance == 37:
+            print "woohoo binHammingDistance test successful"
             return 0
         else:
-            print "try again - counter: " + diffCount
-    return diffCount
+            print "binHammingDistance failed - distance:  %d (should be 37)" % distance
+    return distance
 
 def calckeysize(encryptedString):
     distances = []
@@ -110,20 +106,19 @@ def calckeysize(encryptedString):
         #avg_norm_dist = float(dist1 + dist2) / 2 / key_size
         distances.append((key_size, avg_norm_dist))
     sorted_distances = sorted(distances, key=lambda x: x[1])[:3]
+    print "top 3 (key_size, normalized distance) touples:"
     print sorted_distances
-    return sorted_distances[0][1]
 
 
-def s1ch6():
-    #binHammingDistance()
-    # working
+def ch6():
+    binHammingDistance()
     
-    f = open("6.txt", 'r')
+    f = open("data/6.txt", 'r')
     encodedString = f.read()
     encryptedString = base64.b64decode(encodedString)
     
-    #calckeysize(encryptedString)
-    # working, result:
+    calckeysize(encryptedString)
+    # top 3 keysizes:
     # [(5, 2.68), (29, 2.6965517241379313), (15, 2.96)]
     # correct size is 29
     key_size = 29
@@ -131,24 +126,34 @@ def s1ch6():
     
     transposed_blocks = []
     for i in range(key_size):
-        moo = [block[i] for block in blocks[:-1]]
-        transposed_blocks.append("".join(moo))
+        transposed_blocks.append("".join([block[i] for block in blocks[:-1]]))
     
     key = ""
     for tblock in transposed_blocks:
-        moo = findSingleCharXor(tblock)
-        key += moo[2]
+        key += findSingleCharXor(tblock)[2]
+    print "key is:\n%s" % key
     
-    print "key is '%s'" % key
-    
-    decrypted = "".join([getXored(key, x) for x in blocks])
-    
-    print "decrypted message is:"
-    print decrypted
+    decryptedString = "".join([getXored(key, x) for x in blocks])
+    print "decryptedString message is:\n%s" % decryptedString
 
-#s1ch1()
-#s1ch2()
-#s1ch3()
-#s1ch4()
-#s1ch5()
-s1ch6()
+def ch7():
+    print "try later"
+
+def ch8():
+    print "try later"
+
+def init():
+    choice = raw_input("enter [1-8] to select challange: ")
+    methodSwitcher = {
+        "1": ch1,
+        "2": ch2,
+        "3": ch3,
+        "4": ch4,
+        "5": ch5,
+        "6": ch6,
+        "7": ch7,
+        "8": ch8,
+    }
+    methodSwitcher.get(choice, ch6)()
+
+init()
